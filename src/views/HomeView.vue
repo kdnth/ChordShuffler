@@ -2,6 +2,9 @@
 import { Note, Quality } from '@/chords';
 import type { Chord } from '@/chords';
 import ChordCard from '@/components/ChordCard.vue';
+import HomeHero from '@/components/HomeHero.vue';
+import PauseButton from '@/components/PauseButton.vue';
+import PlayButton from '@/components/PlayButton.vue';
 import { ref } from 'vue';
 // No options yet, just shuffle all chords
 function generate_random_chord() {
@@ -61,51 +64,14 @@ function pauseShuffle() {
 }
 </script>
 <template>
+  <HomeHero />
   <div class="m-6 flex-col">
     <p v-if="!isPaused">Next chord in {{ countdown }}...</p>
     <ChordCard class="my-2" :chord="current_chord" />
 
     <div class="flex justify-start gap-4">
-      <button
-        :disabled="!isPaused"
-        class="p-2 rounded-lg bg-black text-white hover:bg-gray-600 disabled:bg-neutral-400"
-        @click="shuffleChords"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="size-6"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-          />
-        </svg>
-      </button>
-      <button
-        :disabled="isPaused"
-        class="p-2 rounded-lg bg-black text-white hover:bg-gray-600 disabled:bg-neutral-400"
-        @click="pauseShuffle"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="size-6"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15.75 5.25v13.5m-7.5-13.5v13.5"
-          />
-        </svg>
-      </button>
+      <PlayButton :disabled="!isPaused" @click="shuffleChords" />
+      <PauseButton :disabled="isPaused" @click="pauseShuffle" />
     </div>
   </div>
 </template>
