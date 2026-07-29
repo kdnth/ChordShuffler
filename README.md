@@ -1,10 +1,8 @@
-# chords
+# Chord Shuffler
 
-This template should help get you started developing with Vue 3 in Vite.
+Simple serverless chord shuffler for chord practice.
 
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+It currently only shuffles 7th chords. Planning to expand to other chord types.
 
 ## Recommended Browser Setup
 
