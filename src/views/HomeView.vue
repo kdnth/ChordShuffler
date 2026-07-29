@@ -66,8 +66,8 @@ function pauseShuffle() {
 <template>
   <HomeHero />
   <div class="m-6 flex-col">
-    <p v-if="!isPaused">Next chord in {{ countdown }}...</p>
-    <ChordCard class="my-2" :chord="current_chord" />
+    <p v-if="!isPaused" class="font-body text-red-400">Next chord in {{ countdown }}...</p>
+    <ChordCard class="my-6" :chord="current_chord" />
 
     <div class="flex justify-start gap-4">
       <PlayButton :disabled="!isPaused" @click="shuffleChords" />
