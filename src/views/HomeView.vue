@@ -46,6 +46,52 @@ const keyOptions = computed(() =>
   }))
 );
 
+interface ChordOption {
+  value: string;
+  label: string;
+  note: Note;
+  quality: Quality;
+}
+
+const chordOptions = computed<ChordOption[]>(() =>
+  allNotes.flatMap((note) =>
+    allQualities.map((quality) => ({
+      value: `${note}-${quality}`,
+      label: `${note}${quality}`,
+      note,
+      quality
+    }))
+  )
+);
+
+// Transient v-model for the chord picker. Always reset back to [] immediately
+// after a pick so the same chord can be added again (tags mode otherwise
+// treats re-selecting an already-selected value as a toggle/removal).
+const progressionPicker = ref<string[]>([]);
+const progressionChords = ref<Chord[]>([]);
+const hasProgression = computed(() => progressionChords.value.length > 0);
+const progressionIndex = ref(0);
+
+watch(progressionPicker, (values) => {
+  if (values.length === 0) return;
+  for (const value of values) {
+    const option = chordOptions.value.find((o) => o.value === value);
+    if (option) progressionChords.value.push({ note: option.note, quality: option.quality });
+  }
+  progressionPicker.value = [];
+  progressionIndex.value = 0;
+});
+
+function removeProgressionChord(index: number) {
+  progressionChords.value.splice(index, 1);
+  progressionIndex.value = 0;
+}
+
+function clearProgression() {
+  progressionChords.value = [];
+  progressionIndex.value = 0;
+}
+
 const waitSeconds = ref<number>(5);
 const waitMs = computed(() => waitSeconds.value * 1000); // 5 seconds
 const maxSeconds = 20;
@@ -138,6 +184,15 @@ function generate_random_chord(qualities: Quality[]) {
   }
 }
 
+function next_progression_chord(progression: Chord[]) {
+  const index = progressionIndex.value % progression.length;
+  const chord = progression[index]!;
+  progressionIndex.value = index + 1;
+  const noteArr: Note[] = chord.note.includes('#') ? chords.notesWithSharps : chords.notesWithFlats;
+  playChord(chord, noteArr);
+  return chord;
+}
+
 function playChord(chord: Chord, noteArr: Note[]) {
   const chordNoteArr = audio.getChordMidiNoteArray(chord, noteArr);
   piano!.stop();
@@ -159,7 +214,9 @@ async function handleChordShuffle() {
     await waitForDownbeat();
   }
   while (isPaused.value == false) {
-    current_chord.value = generate_random_chord(selectedQualities.value);
+    current_chord.value = hasProgression.value
+      ? next_progression_chord(progressionChords.value)
+      : generate_random_chord(selectedQualities.value);
     if (triggerMode.value === 'beats') {
       await waitForBeats(waitBeats.value);
     } else {
@@ -187,6 +244,7 @@ async function ensurePiano() {
 
 async function shuffleChords() {
   await ensurePiano();
+  progressionIndex.value = 0;
   isPaused.value = false;
   if (triggerMode.value === 'beats' && !metronome.isPlaying.value) {
     await metronome.start();
@@ -239,7 +297,7 @@ function handleBeatsInput(event: Event) {
             >Chord Types</label
           >
           <button
-            v-if="selectedQualities.length < allQualities.length"
+            v-if="!hasProgression && selectedQualities.length < allQualities.length"
             type="button"
             class="text-xs font-semibold text-blue-500 hover:text-blue-600"
             @click="selectedQualities = [...allQualities]"
@@ -253,7 +311,52 @@ function handleBeatsInput(event: Event) {
           class="quality-select w-full sm:w-72"
           mode="tags"
           :options="allQualities"
+          :disabled="hasProgression"
           placeholder="Select chord types"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <label
+            for="progressionSelect"
+            class="text-sm font-semibold uppercase tracking-wide text-gray-500"
+            >Progression (Optional)</label
+          >
+          <button
+            v-if="hasProgression"
+            type="button"
+            class="text-xs font-semibold text-blue-500 hover:text-blue-600"
+            @click="clearProgression"
+          >
+            Clear
+          </button>
+        </div>
+        <div v-if="hasProgression" class="flex flex-wrap gap-1.5">
+          <span
+            v-for="(chord, i) in progressionChords"
+            :key="i"
+            class="inline-flex items-center gap-1 rounded-md bg-blue-500 px-2 py-1 text-xs font-semibold text-white"
+          >
+            {{ chord.note }}{{ chord.quality }}
+            <button
+              type="button"
+              class="leading-none text-blue-100 hover:text-white"
+              aria-label="Remove chord"
+              @click="removeProgressionChord(i)"
+            >
+              ×
+            </button>
+          </span>
+        </div>
+        <Multiselect
+          id="progressionSelect"
+          v-model="progressionPicker"
+          class="quality-select w-full sm:w-72"
+          mode="tags"
+          :searchable="true"
+          :close-on-select="false"
+          :options="chordOptions"
+          placeholder="Add chords in order"
         />
       </div>
       <div class="flex flex-col gap-1.5">
@@ -262,7 +365,7 @@ function handleBeatsInput(event: Event) {
             >Key (Optional)</label
           >
           <button
-            v-if="activeKey"
+            v-if="activeKey && !hasProgression"
             type="button"
             class="text-xs font-semibold text-blue-500 hover:text-blue-600"
             @click="activeKey = null"
@@ -276,6 +379,7 @@ function handleBeatsInput(event: Event) {
           class="quality-select w-full sm:w-72"
           mode="single"
           :options="keyOptions"
+          :disabled="hasProgression"
           placeholder="Select key"
         />
       </div>
