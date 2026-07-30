@@ -16,6 +16,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vueform/multiselect": "^2.6.11",
+    "smplr": "^1.0.0",
     "tailwindcss": "^4.3.3",
     "vue": "^3.5.40"
   },
