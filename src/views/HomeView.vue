@@ -232,11 +232,21 @@ function handleBeatsInput(event: Event) {
       class="flex flex-wrap items-end gap-6 border-b-2 border-b-gray-200 bg-white py-4 shadow-b-sm"
     >
       <div class="flex flex-col gap-1.5">
-        <label
-          for="qualitySelect"
-          class="text-sm font-semibold uppercase tracking-wide text-gray-500"
-          >Chord Types</label
-        >
+        <div class="flex items-center justify-between gap-2">
+          <label
+            for="qualitySelect"
+            class="text-sm font-semibold uppercase tracking-wide text-gray-500"
+            >Chord Types</label
+          >
+          <button
+            v-if="selectedQualities.length < allQualities.length"
+            type="button"
+            class="text-xs font-semibold text-blue-500 hover:text-blue-600"
+            @click="selectedQualities = [...allQualities]"
+          >
+            Select All
+          </button>
+        </div>
         <Multiselect
           id="qualitySelect"
           v-model="selectedQualities"
