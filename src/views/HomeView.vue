@@ -121,17 +121,19 @@ function handleSecondsInput(event: Event) {
         </div>
       </div>
     </div>
-    <p v-if="!isPaused" class="font-body text-red-400 mt-4">Next chord in {{ countdown }}...</p>
-    <ChordCard class="my-6" :chord="current_chord" />
+    <p v-if="!isPaused" class="font-body text-purple-400 text-lg mt-4 font-bold">
+      Next chord in {{ countdown }}...
+    </p>
+    <ChordCard class="mb-6 mt-3" :chord="current_chord" />
 
     <div class="flex justify-start gap-4">
       <PlayButton
-        class="text-white bg-green-500 rounded-lg"
+        class="text-white bg-green-500 rounded-lg shadow-sm shadow-neutral-700"
         :disabled="!isPaused"
         @click="shuffleChords"
       />
       <PauseButton
-        class="text-white bg-red-500 rounded-lg"
+        class="text-white bg-red-500 rounded-lg shadow-sm shadow-neutral-700"
         :disabled="isPaused"
         @click="pauseShuffle"
       />
