@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { useMetronome } from 'metronome-core/vue';
 import { watch } from 'vue';
+import { useSharedMetronome } from '@/composables/useSharedMetronome';
 import PlayButton from '@/components/PlayButton.vue';
 import PauseButton from './PauseButton.vue';
 
 const { isPlaying, pulse, bpm, meter, accents, toggle, increaseBpm, decreaseBpm, toggleAccent } =
-  useMetronome({
-    bpm: 120,
-    meter: 4
-  });
+  useSharedMetronome();
 
 watch(pulse, (newPulse) => {
   if (newPulse === 1) {
