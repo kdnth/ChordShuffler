@@ -28,7 +28,7 @@ export enum Quality {
 
 export interface Chord {
   note: Note;
-  type: ScaleType;
+  quality: Quality;
 }
 
 export interface Scale {
