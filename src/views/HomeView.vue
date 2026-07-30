@@ -10,8 +10,13 @@ import { computed, ref, watch } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 import { useSharedMetronome } from '@/composables/useSharedMetronome';
+import { SplendidGrandPiano, CacheStorage, Reverb } from 'smplr';
+import * as audio from '@/audioUtil';
 
 const metronome = useSharedMetronome();
+let context: AudioContext | null = null;
+let piano: ReturnType<typeof SplendidGrandPiano> | null = null;
+const isLoadingInstrument = ref(false);
 
 type TriggerMode = 'seconds' | 'beats';
 const triggerMode = ref<TriggerMode>('seconds');
@@ -117,13 +122,36 @@ function generate_random_chord(qualities: Quality[]) {
     const diatonicChords: Chord[] = chords.computeKeyArray(activeKey.value);
     const filtered = diatonicChords.filter((chord) => qualities.includes(chord.quality));
     const chordPool = filtered.length > 0 ? filtered : diatonicChords;
-    return chordPool[Math.floor(Math.random() * chordPool.length)]!;
+    const chord = chordPool[Math.floor(Math.random() * chordPool.length)]!;
+    playChord(chord, activeNotes.value);
+    return chord;
+  } else {
+    const chord: Chord = {
+      note: activeNotes.value[Math.floor(Math.random() * activeNotes.value.length)]!,
+      quality: qualities[Math.floor(Math.random() * qualities.length)]!
+    };
+    const noteArr: Note[] = chord.note.includes('#')
+      ? chords.notesWithSharps
+      : chords.notesWithFlats;
+    playChord(chord, noteArr);
+    return chord;
   }
-  const chord: Chord = {
-    note: activeNotes.value[Math.floor(Math.random() * activeNotes.value.length)]!,
-    quality: qualities[Math.floor(Math.random() * qualities.length)]!
-  };
-  return chord;
+}
+
+function playChord(chord: Chord, noteArr: Note[]) {
+  const chordNoteArr = audio.getChordMidiNoteArray(chord, noteArr);
+  piano!.stop();
+  chordNoteArr.forEach((note) => {
+    piano!.start({
+      note,
+      time: context!.currentTime,
+      duration:
+        triggerMode.value === 'seconds'
+          ? waitSeconds.value
+          : audio.beatsToSeconds(waitBeats.value, metronome.bpm.value),
+      velocity: Math.ceil(Math.random() * (120 - 110 + 1)) // random velocity btwn 110-120
+    });
+  });
 }
 
 async function handleChordShuffle() {
@@ -140,7 +168,25 @@ async function handleChordShuffle() {
   }
 }
 
+async function ensurePiano() {
+  if (!context) context = new AudioContext();
+  if (context.state === 'suspended') await context.resume();
+  if (!piano) {
+    let reverb = Reverb(context);
+    isLoadingInstrument.value = true;
+    piano = SplendidGrandPiano(context, {
+      storage: CacheStorage(),
+      volume: 38,
+      volumeToGain: (db: number) => Math.pow(10, db / 20)
+    });
+    piano.output.addEffect('reverb', reverb, 0.2);
+    await piano.ready;
+    isLoadingInstrument.value = false;
+  }
+}
+
 async function shuffleChords() {
+  await ensurePiano();
   isPaused.value = false;
   if (triggerMode.value === 'beats' && !metronome.isPlaying.value) {
     await metronome.start();

@@ -68,6 +68,39 @@ export interface ScaleDegreeSteps {
   seventh: number;
 }
 
+export interface ChordSteps {
+  third: number;
+  fifth: number;
+  seventh: number;
+} // support other chord types later
+
+export const CHORD_STEPS_MAP: Record<Quality, ChordSteps> = {
+  [Quality.MAJ_7]: {
+    third: 4,
+    fifth: 7,
+    seventh: 11
+  },
+  [Quality.DOM_7]: {
+    third: 4,
+    fifth: 7,
+    seventh: 10
+  },
+  [Quality.MIN_7]: {
+    third: 3,
+    fifth: 7,
+    seventh: 10
+  },
+  [Quality.HALF_DIM]: {
+    third: 3,
+    fifth: 6,
+    seventh: 10
+  },
+  [Quality.DIM_7]: {
+    third: 3,
+    fifth: 6,
+    seventh: 9
+  }
+};
 export const notesWithSharps: Note[] = [
   Note.A,
   Note.A_SHARP,
