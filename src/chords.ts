@@ -31,14 +31,22 @@ export interface Chord {
   quality: Quality;
 }
 
-export interface Scale {
+export interface Key {
   tonic: Note;
   type: ScaleType;
+  useFlats: boolean;
+}
+
+class InvalidKeyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidKeyError';
+  }
 }
 
 export enum ScaleType {
   MAJOR = 'major',
-  NATURAL_MINOR = 'natural minor'
+  NATURAL_MINOR = 'minor'
 } // all other scales out of scope right now
 
 export interface ScaleDegreeQualities {
@@ -60,7 +68,7 @@ export interface ScaleDegreeSteps {
   seventh: number;
 }
 
-const notesWithSharps: Note[] = [
+export const notesWithSharps: Note[] = [
   Note.A,
   Note.A_SHARP,
   Note.B,
@@ -75,7 +83,7 @@ const notesWithSharps: Note[] = [
   Note.G_SHARP
 ];
 
-const notesWithFlats: Note[] = [
+export const notesWithFlats: Note[] = [
   Note.A,
   Note.B_FLAT,
   Note.B,
@@ -139,40 +147,37 @@ const SCALE_MAP: Record<ScaleType, { steps: ScaleDegreeSteps; qualities: ScaleDe
   }
 };
 
-const VALID_KEY_MAP = {
-  [ScaleType.MAJOR]: {
-    [Note.C]: notesWithSharps,
-    [Note.G]: notesWithSharps,
-    [Note.D]: notesWithSharps,
-    [Note.A]: notesWithSharps,
-    [Note.E]: notesWithSharps,
-    [Note.B]: notesWithSharps,
-    [Note.F_SHARP]: notesWithSharps,
-    [Note.G_FLAT]: notesWithFlats,
-    [Note.C_SHARP]: notesWithSharps,
-    [Note.D_FLAT]: notesWithFlats,
-    [Note.A_FLAT]: notesWithFlats,
-    [Note.E_FLAT]: notesWithFlats,
-    [Note.B_FLAT]: notesWithFlats,
-    [Note.F]: notesWithFlats
-  },
-  [ScaleType.NATURAL_MINOR]: {
-    [Note.A]: notesWithSharps,
-    [Note.E]: notesWithSharps,
-    [Note.B]: notesWithSharps,
-    [Note.F_SHARP]: notesWithSharps,
-    [Note.C_SHARP]: notesWithSharps,
-    [Note.G_SHARP]: notesWithSharps,
-    [Note.D_SHARP]: notesWithSharps,
-    [Note.E_FLAT]: notesWithFlats,
-    [Note.A_SHARP]: notesWithSharps,
-    [Note.B_FLAT]: notesWithFlats,
-    [Note.F]: notesWithFlats,
-    [Note.C]: notesWithFlats,
-    [Note.G]: notesWithFlats,
-    [Note.D]: notesWithFlats
-  }
-};
+export const validKeys: Key[] = [
+  { tonic: Note.C, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.G, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.D, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.A, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.E, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.B, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.F_SHARP, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.G_FLAT, type: ScaleType.MAJOR, useFlats: true },
+  { tonic: Note.C_SHARP, type: ScaleType.MAJOR, useFlats: false },
+  { tonic: Note.D_FLAT, type: ScaleType.MAJOR, useFlats: true },
+  { tonic: Note.A_FLAT, type: ScaleType.MAJOR, useFlats: true },
+  { tonic: Note.E_FLAT, type: ScaleType.MAJOR, useFlats: true },
+  { tonic: Note.B_FLAT, type: ScaleType.MAJOR, useFlats: true },
+  { tonic: Note.F, type: ScaleType.MAJOR, useFlats: true },
+
+  { tonic: Note.A, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.E, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.B, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.F_SHARP, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.C_SHARP, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.G_SHARP, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.D_SHARP, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.E_FLAT, type: ScaleType.NATURAL_MINOR, useFlats: true },
+  { tonic: Note.A_SHARP, type: ScaleType.NATURAL_MINOR, useFlats: false },
+  { tonic: Note.B_FLAT, type: ScaleType.NATURAL_MINOR, useFlats: true },
+  { tonic: Note.F, type: ScaleType.NATURAL_MINOR, useFlats: true },
+  { tonic: Note.C, type: ScaleType.NATURAL_MINOR, useFlats: true },
+  { tonic: Note.G, type: ScaleType.NATURAL_MINOR, useFlats: true },
+  { tonic: Note.D, type: ScaleType.NATURAL_MINOR, useFlats: true }
+];
 
 export const allNotes = Object.values(Note); // TODO: use this in HomeView
 
@@ -183,38 +188,46 @@ export function createChord(note: Note, quality: Quality) {
   };
 } // TODO: use this in HomeView
 
-export function computeKeyArray(tonic: Note, scaleType: ScaleType) {
-  /* Computes Chord array of diatonic chords according to the provided tonic and scale type*/
-  const allNotes: Note[] =
-    VALID_KEY_MAP[scaleType][tonic as keyof (typeof VALID_KEY_MAP)[ScaleType]];
-  const tonicIndex = allNotes.indexOf(tonic);
+export function findValidKey(tonic: Note, scaleType: ScaleType) {
+  /* finds valid key in validKeys matching provided tonic and scaleType. Throws InvalidKeyError if key is invalid*/
+  const key = validKeys.find((key) => key.tonic === tonic && key.type === scaleType);
+  if (!key) {
+    throw new InvalidKeyError(`${tonic} ${scaleType} is not a valid key`);
+  }
+
+  return key;
+}
+
+export function computeKeyArray(key: Key) {
+  /* Computes Chord array of diatonic chords according to the provided Key.*/
+
+  const allNotes: Note[] = key?.useFlats ? notesWithFlats : notesWithSharps;
+  const tonicIndex = allNotes.indexOf(key.tonic);
   return [
-    createChord(allNotes[tonicIndex]!, SCALE_MAP[scaleType].qualities.root),
+    createChord(allNotes[tonicIndex]!, SCALE_MAP[key.type].qualities.root),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.second) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.second
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.second) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.second
     ),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.third) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.third
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.third) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.third
     ),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.fourth) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.fourth
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.fourth) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.fourth
     ),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.fifth) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.fifth
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.fifth) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.fifth
     ),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.sixth) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.sixth
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.sixth) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.sixth
     ),
     createChord(
-      allNotes[(tonicIndex + SCALE_MAP[scaleType].steps.seventh) % allNotes.length]!,
-      SCALE_MAP[scaleType].qualities.seventh
+      allNotes[(tonicIndex + SCALE_MAP[key.type].steps.seventh) % allNotes.length]!,
+      SCALE_MAP[key.type].qualities.seventh
     )
   ];
 }
-
-console.log(computeKeyArray(Note.C, ScaleType.MAJOR));
