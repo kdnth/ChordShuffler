@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import AppFooter from './components/AppFooter.vue';
+import FloatingMetronome from './components/FloatingMetronome.vue';
 import HomeView from './views/HomeView.vue';
 </script>
 
 <template>
   <HomeView />
-  <AppFooter class="absolute bottom-2 left-1/2 -translate-x-1/2" />
+  <div class="px-4 w-full absolute bottom-2 flex justify-between">
+    <AppFooter />
+    <FloatingMetronome />
+  </div>
 </template>
 
 <style scoped></style>

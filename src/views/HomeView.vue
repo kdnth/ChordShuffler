@@ -125,8 +125,16 @@ function handleSecondsInput(event: Event) {
     <ChordCard class="my-6" :chord="current_chord" />
 
     <div class="flex justify-start gap-4">
-      <PlayButton :disabled="!isPaused" @click="shuffleChords" />
-      <PauseButton :disabled="isPaused" @click="pauseShuffle" />
+      <PlayButton
+        class="text-white bg-green-500 rounded-lg"
+        :disabled="!isPaused"
+        @click="shuffleChords"
+      />
+      <PauseButton
+        class="text-white bg-red-500 rounded-lg"
+        :disabled="isPaused"
+        @click="pauseShuffle"
+      />
     </div>
   </div>
 </template>

@@ -1,9 +1,6 @@
 <script lang="ts"></script>
 <template>
-  <button
-    v-bind="$attrs"
-    class="p-2 rounded-lg bg-green-600 text-white hover:bg-gray-600 disabled:bg-neutral-400"
-  >
+  <button v-bind="$attrs" class="p-2 hover:bg-gray-600 disabled:bg-neutral-400">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
