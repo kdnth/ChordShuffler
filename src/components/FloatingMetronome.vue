@@ -4,8 +4,32 @@ import { useSharedMetronome } from '@/composables/useSharedMetronome';
 import PlayButton from '@/components/PlayButton.vue';
 import PauseButton from './PauseButton.vue';
 
-const { isPlaying, pulse, bpm, meter, accents, toggle, increaseBpm, decreaseBpm, toggleAccent } =
-  useSharedMetronome();
+const {
+  isPlaying,
+  pulse,
+  bpm,
+  meter,
+  accents,
+  toggle,
+  increaseBpm,
+  decreaseBpm,
+  toggleAccent,
+  setMeter
+} = useSharedMetronome();
+
+const meterOptions = [
+  { label: '2/4', value: 2 },
+  { label: '3/4', value: 3 },
+  { label: '4/4', value: 4 },
+  { label: '5/4', value: 5 },
+  { label: '6/8', value: 6 },
+  { label: '7/8', value: 7 }
+];
+
+function handleMeterChange(event: Event) {
+  const value = Number((event.target as HTMLSelectElement).value);
+  setMeter(value);
+}
 
 watch(pulse, (newPulse) => {
   if (newPulse === 1) {
@@ -48,9 +72,19 @@ watch(pulse, (newPulse) => {
     </div>
 
     <div
-      class="mx-2 shrink-0 border-l border-neutral-700 pl-3 text-xs font-semibold uppercase tracking-wide text-neutral-500"
+      class="mx-2 flex shrink-0 items-center gap-2 border-l border-neutral-700 pl-3 text-xs font-semibold uppercase tracking-wide text-neutral-500"
     >
-      Beat <span class="text-neutral-300">{{ pulse }}</span> / {{ meter }}
+      Beat <span class="text-neutral-300">{{ pulse }}</span> /
+      <select
+        aria-label="Meter"
+        class="rounded-full border-2 border-neutral-600 bg-neutral-900 px-2 py-1 text-xs font-bold text-neutral-300 focus:border-blue-400 focus:outline-none"
+        :value="meter"
+        @change="handleMeterChange"
+      >
+        <option v-for="opt in meterOptions" :key="opt.value" :value="opt.value">
+          {{ opt.label }}
+        </option>
+      </select>
     </div>
 
     <div class="ml-2 flex shrink-0 items-center gap-1.5 border-l border-neutral-700 pl-3">
