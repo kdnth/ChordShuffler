@@ -12,7 +12,9 @@ provide(METRONOME_KEY, metronome);
 
 <template>
   <HomeView />
-  <div class="px-4 w-full absolute bottom-2 flex justify-between">
+  <div
+    class="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between"
+  >
     <AppFooter />
     <FloatingMetronome />
   </div>

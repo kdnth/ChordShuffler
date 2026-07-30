@@ -7,10 +7,12 @@ const props = defineProps<{
 </script>
 <template>
   <div
-    class="rounded-xl min-h-48 bg-blue-500 flex items-center justify-center shadow-sm shadow-neutral-500 border border-blue-300"
+    class="rounded-xl min-h-48 bg-blue-500 flex items-center justify-center px-4 text-center shadow-sm shadow-neutral-500 border border-blue-300"
   >
     <div v-if="props.chord">
-      <h1 class="text-5xl text-white font-black tracking-wide font-body">
+      <h1
+        class="text-4xl sm:text-5xl text-white font-black tracking-wide font-body wrap-break-word"
+      >
         {{ props.chord?.note }}{{ props.chord?.quality }}
       </h1>
     </div>

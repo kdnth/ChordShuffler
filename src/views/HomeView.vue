@@ -181,7 +181,7 @@ function handleBeatsInput(event: Event) {
 </script>
 <template>
   <HomeHero />
-  <div class="m-6 flex-col">
+  <div class="m-6 flex-col pb-28 sm:pb-24">
     <div
       class="flex flex-wrap items-end gap-6 border-b-2 border-b-gray-200 bg-white py-4 shadow-b-sm"
     >
