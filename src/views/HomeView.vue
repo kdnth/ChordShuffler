@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Note, Quality } from '@/chords';
-import type { Chord } from '@/chords';
+import * as chords from '@/chords';
+import type { Chord, Key } from '@/chords';
 import ChordCard from '@/components/ChordCard.vue';
 import HomeHero from '@/components/HomeHero.vue';
 import PauseButton from '@/components/PauseButton.vue';
@@ -9,21 +10,29 @@ import { computed, ref } from 'vue';
 import Multiselect from '@vueform/multiselect';
 import '@vueform/multiselect/themes/default.css';
 
-function generate_random_chord(qualities: Quality[]) {
-  const notes: Note[] = Object.values(Note);
-
-  const chord: Chord = {
-    note: notes[Math.floor(Math.random() * notes.length)]!,
-    quality: qualities[Math.floor(Math.random() * qualities.length)]!
-  };
-
-  return chord;
-}
-
 const isPaused = ref<boolean>(true);
+
 const current_chord = ref<Chord>({ note: Note.C, quality: Quality.MAJ_7 });
+
 const allQualities: Quality[] = Object.values(Quality);
 const selectedQualities = ref<Quality[]>([...allQualities]);
+
+const allNotes: Note[] = chords.allNotes;
+const activeKey = ref<Key | null>(null);
+
+const activeNotes = computed<Note[]>(() => {
+  if (activeKey.value) {
+    return activeKey.value.useFlats ? chords.notesWithFlats : chords.notesWithSharps;
+  }
+  return allNotes;
+});
+
+const keyOptions = computed(() =>
+  chords.validKeys.map((key) => ({
+    value: key,
+    label: `${key.tonic} ${key.type === chords.ScaleType.MAJOR ? '' : 'minor'}`.trim()
+  }))
+);
 
 const waitSeconds = ref<number>(5);
 const waitMs = computed(() => waitSeconds.value * 1000); // 5 seconds
@@ -52,6 +61,20 @@ const waitWithCountdown = (ms: number) => {
     }, 1000);
   });
 };
+
+function generate_random_chord(qualities: Quality[]) {
+  if (activeKey.value) {
+    const diatonicChords: Chord[] = chords.computeKeyArray(activeKey.value);
+    const filtered = diatonicChords.filter((chord) => qualities.includes(chord.quality));
+    const chordPool = filtered.length > 0 ? filtered : diatonicChords;
+    return chordPool[Math.floor(Math.random() * chordPool.length)]!;
+  }
+  const chord: Chord = {
+    note: activeNotes.value[Math.floor(Math.random() * activeNotes.value.length)]!,
+    quality: qualities[Math.floor(Math.random() * qualities.length)]!
+  };
+  return chord;
+}
 
 async function handleChordShuffle() {
   while (isPaused.value == false) {
@@ -99,6 +122,29 @@ function handleSecondsInput(event: Event) {
           mode="tags"
           :options="allQualities"
           placeholder="Select chord types"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between gap-2">
+          <label for="keySelect" class="text-sm font-semibold uppercase tracking-wide text-gray-500"
+            >Key (Optional)</label
+          >
+          <button
+            v-if="activeKey"
+            type="button"
+            class="text-xs font-semibold text-blue-500 hover:text-blue-600"
+            @click="activeKey = null"
+          >
+            Clear
+          </button>
+        </div>
+        <Multiselect
+          id="keySelect"
+          v-model="activeKey"
+          class="quality-select w-full sm:w-72"
+          mode="single"
+          :options="keyOptions"
+          placeholder="Select key"
         />
       </div>
       <div class="flex flex-col gap-1.5">
